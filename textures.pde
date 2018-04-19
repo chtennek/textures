@@ -1,4 +1,7 @@
 PImage img;
+PGraphics buffer, output;
+int bufferSize = 256;
+int outputSize = 1024;
 char drawMode = 'e';
 
 // Colors
@@ -14,17 +17,19 @@ int tileY = 1;
 color[] cycle = {
   color(0), 
   color(255), 
-  color(127), 
+  //color(127), 
 };
 
 void setup()
 {
-  size(512, 512);
+  size(256, 256);
   noSmooth();
 
   // Background image
+  buffer = createGraphics(bufferSize, bufferSize);
+  output = createGraphics(outputSize, outputSize);
   img = loadImage("LOUDER_Cover.png");
-  image(img, 0, 0);
+  keyPressed();
 
   //colorMode(RGB, 8);
 }
@@ -61,10 +66,10 @@ void keyPressed() {
     break;
 
   case ']':
-    rotation += 90;
+    rotation += 45;
     break;
   case '[':
-    rotation -= 90;
+    rotation -= 45;
     break;
 
   case CODED:
@@ -102,8 +107,10 @@ void keyPressed() {
     break;
 
   case 's':
-    saveFrame("gradient-###.png");
-    println(frameCount);
+    String filename = "gradient-" + millis() + ".png"; 
+    drawPatternTo(output);
+    output.save(filename);
+    println(filename);
     return;
 
   default:
@@ -111,40 +118,11 @@ void keyPressed() {
   }
 
   // Draw pattern
-  image(img, 0, 0);
-  switch (drawMode) {
-  case 'r':
-    radialGradient(.5f * width, .5f * height, .75f * width, cycle[c00], cycle[c01]);
-    break;
-
-  case 'w':
-    sweepGradient(.5f * width, .5f * height, .75f * width, angle, param, cycle[c00], cycle[c01]);
-    break;
-
-  case 'e':
-    linearGradient(0, 0, width, height, cycle[c00], cycle[c01], cycle[c10], cycle[c11]);
-    break;
-
-  case 'd':
-    int y = height / 2 / param;
-    linearGradient(0, 0, width, y, cycle[c10], cycle[c11], cycle[c00], cycle[c01]);
-    linearGradient(0, y, width, height - 2 * y, cycle[c00], cycle[c01], cycle[c00], cycle[c01]);
-    linearGradient(0, height - y, width, y, cycle[c00], cycle[c01], cycle[c10], cycle[c11]);
-    break;
-  }
-
-  if (tileX != 1 || tileY != 1) {
-    tile(tileX, tileY);
-  }
-
-  if (rotation != 0) {
-    PImage p = get(0, 0, width, height);
-    pushMatrix();
-    translate(width / 2, height / 2);
-    rotate(radians(rotation));
-    image(p, -width / 2, -height / 2);
-    popMatrix();
-  }
-
-  println(rotation, param, hex(cycle[c00]), hex(cycle[c01]), hex(cycle[c10]), hex(cycle[c11]));
+  buffer.beginDraw();
+  buffer.image(img, 0, 0, buffer.width, buffer.height);
+  buffer.endDraw();
+  drawPatternTo(buffer);
+  image(buffer, 0, 0, width, height);
+  
+  println(drawMode, rotation, param, hex(cycle[c00]), hex(cycle[c01]), hex(cycle[c10]), hex(cycle[c11]));
 }
